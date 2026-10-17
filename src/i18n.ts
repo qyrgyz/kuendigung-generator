@@ -1,0 +1,97 @@
+import type { ContractType, LetterData, Reason, TerminationType } from './letter'
+
+export type Lang = 'de' | 'en'
+
+const de = {
+  title: 'Kündigungsschreiben erstellen',
+  switchLabel: 'English',
+  disclaimerTitle: 'Keine Rechtsberatung.',
+  disclaimer:
+    'Dieses Tool hilft beim Formulieren eines Kündigungsschreibens. Es prüft nicht, ob Ihre Kündigung wirksam ist, und berechnet keine verbindlichen Fristen. Bei Streitfragen hilft die',
+  consumerCentre: 'Verbraucherzentrale',
+  tipTitle: 'Tipp zum Versand:',
+  tip: 'Schicken Sie den Brief per Einschreiben mit Rückschein, damit Sie den Zugang beweisen können. Oft geht es auch online: Anbieter müssen auf ihrer Website einen Kündigungsbutton („Verträge hier kündigen“) anbieten.',
+  fields: {
+    senderName: 'Ihr Name',
+    senderAddress: 'Ihre Adresse (Straße, PLZ Ort)',
+    providerName: 'Name des Anbieters',
+    providerAddress: 'Adresse des Anbieters',
+    contractType: 'Vertragsart',
+    contractNumber: 'Kunden- oder Vertragsnummer',
+    terminationType: 'Art der Kündigung',
+    endDate: 'Kündigen zum',
+    reason: 'Grund',
+    reasonText: 'Grund in eigenen Worten (auf Deutsch)',
+    revokeSepa: 'SEPA-Lastschriftmandat widerrufen',
+    revokeConsent: 'Einwilligung zu Werbung und Datennutzung widerrufen',
+    place: 'Ort (für die Datumszeile)',
+  } satisfies Record<keyof LetterData, string>,
+  contractTypes: {
+    gym: 'Fitnessstudio',
+    mobile: 'Handyvertrag',
+    internet: 'Internet / DSL',
+    streaming: 'Streaming',
+    insurance: 'Versicherung',
+    newspaper: 'Zeitung / Zeitschrift',
+    electricity: 'Strom',
+  } satisfies Record<ContractType, string>,
+  terminationTypes: {
+    ordinary: 'Ordentlich zum nächstmöglichen Termin',
+    date: 'Zu einem bestimmten Datum',
+    extraordinary: 'Außerordentlich / Sonderkündigung',
+  } satisfies Record<TerminationType, string>,
+  reasons: { priceIncrease: 'Preiserhöhung', move: 'Umzug', other: 'Anderer Grund' } satisfies Record<Reason, string>,
+  optional: 'Optionale Zusätze',
+  download: 'PDF herunterladen',
+  missing: 'Bitte noch ausfüllen:',
+  preview: 'Vorschau',
+  previewNote: 'Das Schreiben ist immer auf Deutsch.',
+}
+
+const en: typeof de = {
+  title: 'Create a cancellation letter',
+  switchLabel: 'Deutsch',
+  disclaimerTitle: 'Not legal advice.',
+  disclaimer:
+    'This tool helps you word a cancellation letter. It does not check whether your cancellation is valid and does not calculate binding deadlines. For disputes, contact the',
+  consumerCentre: 'Verbraucherzentrale (consumer advice centre)',
+  tipTitle: 'Sending tip:',
+  tip: 'Send the letter by Einschreiben mit Rückschein (registered mail with return receipt) so you can prove it arrived. Often you can also cancel online: providers must offer a cancellation button ("Verträge hier kündigen") on their website.',
+  fields: {
+    senderName: 'Your name',
+    senderAddress: 'Your address (street, postcode city)',
+    providerName: 'Provider name',
+    providerAddress: 'Provider address',
+    contractType: 'Contract type',
+    contractNumber: 'Customer or contract number',
+    terminationType: 'Type of cancellation',
+    endDate: 'Cancel on',
+    reason: 'Reason',
+    reasonText: 'Reason in your own words (in German)',
+    revokeSepa: 'Revoke SEPA direct-debit mandate',
+    revokeConsent: 'Revoke consent to advertising and data use',
+    place: 'Place (for the date line)',
+  },
+  contractTypes: {
+    gym: 'Gym',
+    mobile: 'Mobile phone',
+    internet: 'Internet / DSL',
+    streaming: 'Streaming',
+    insurance: 'Insurance',
+    newspaper: 'Newspaper / magazine',
+    electricity: 'Electricity',
+  },
+  terminationTypes: {
+    ordinary: 'Regular, at the next possible date',
+    date: 'On a specific date',
+    extraordinary: 'Extraordinary / special right to cancel',
+  },
+  reasons: { priceIncrease: 'Price increase', move: 'Moving house', other: 'Other reason' },
+  optional: 'Optional additions',
+  download: 'Download PDF',
+  missing: 'Still needed:',
+  preview: 'Preview',
+  previewNote: 'The letter is always in German.',
+}
+
+export const STRINGS: Record<Lang, typeof de> = { de, en }

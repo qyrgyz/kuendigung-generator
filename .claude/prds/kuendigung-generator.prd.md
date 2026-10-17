@@ -43,7 +43,7 @@ The app sends no data, so live usage analytics are not available by design. See 
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
 | 1 | Letter core | A user can make a correct PDF for one contract type in German | in-progress | .claude/plans/kuendigung-generator.plan.md |
-| 2 | All types + bilingual UI | All 7 types, with an English and German UI and field help | pending | — |
+| 2 | All types + bilingual UI | All 7 types, with an English and German UI and field help | in-progress | — |
 | 3 | Send-safely guidance + validation | Einschreiben checklist, legal notice, and usability test against the metrics | pending | — |
 
 ## Open Questions
