@@ -83,3 +83,64 @@ describe('missingFields', () => {
     expect(missingFields({ ...data, terminationType: 'extraordinary', reason: 'move' })).toEqual([])
   })
 })
+
+describe('no empty lines or placeholders', () => {
+  const minimal: LetterData = { ...data, revokeSepa: false, revokeConsent: false }
+  const leaks = /undefined|null|NaN|\s,|:\s*$|\(\s|\s\)|\s{2,}/
+
+  it.each([
+    ['ordinary', {}],
+    ['fixed date', { terminationType: 'date', endDate: '2027-01-31' }],
+    ['extraordinary, preset reason', { terminationType: 'extraordinary', reason: 'priceIncrease' }],
+    ['extraordinary, own reason', { terminationType: 'extraordinary', reason: 'other', reasonText: 'Studio geschlossen' }],
+  ] as const)('%s with all optional clauses off', (_, d) => {
+    const l = buildLetter({ ...minimal, ...d }, today)
+    for (const line of [...l.sender, ...l.recipient, l.dateLine, l.subject, ...l.paragraphs]) {
+      expect(line.trim()).not.toBe('')
+      expect(line).not.toMatch(leaks)
+    }
+  })
+
+  it('a fixed-date cancellation without a date yet does not render "zum ,"', () => {
+    const l = buildLetter({ ...minimal, terminationType: 'date', endDate: '' }, today)
+    expect(l.paragraphs.join('\n')).not.toMatch(leaks)
+    expect(l.paragraphs[1]).toContain('zum nächstmöglichen Termin')
+  })
+
+  it('an own reason left blank adds no empty "Grund" line', () => {
+    const l = buildLetter({ ...minimal, terminationType: 'extraordinary', reason: 'other', reasonText: '  ' }, today)
+    expect(l.paragraphs.join('\n')).not.toContain('Grund')
+    expect(l.paragraphs.every((p) => p.trim())).toBe(true)
+  })
+
+  it('keeps the signature gap only in the closing block', () => {
+    const l = buildLetter(minimal, today)
+    expect(l.closing).toEqual(['Mit freundlichen Grüßen', '', '', '______________________________', 'Jana Müller'])
+  })
+})
+
+describe('umlauts and ß', () => {
+  it('passes user input with ä ö ü Ä Ö Ü ß through unchanged', () => {
+    const l = buildLetter(
+      {
+        ...data,
+        senderName: 'Jürgen Weiß',
+        senderAddress: 'Große Straße 3\n80331 München',
+        providerName: 'Ökostrom Süd GmbH',
+        providerAddress: 'Äußere Ringstraße 9\n70173 Stuttgart',
+        contractNumber: 'ÜÄÖ-ß1',
+        place: 'München',
+        terminationType: 'extraordinary',
+        reason: 'other',
+        reasonText: 'Schließung der Filiale',
+      },
+      today,
+    )
+    expect(l.sender).toEqual(['Jürgen Weiß', 'Große Straße 3', '80331 München'])
+    expect(l.recipient).toEqual(['Ökostrom Süd GmbH', 'Äußere Ringstraße 9', '70173 Stuttgart'])
+    expect(l.dateLine).toBe('München, 17.10.2026')
+    expect(l.subject).toContain('ÜÄÖ-ß1')
+    expect(l.paragraphs).toContain('Grund der Kündigung: Schließung der Filiale')
+    expect(l.closing.at(-1)).toBe('Jürgen Weiß')
+  })
+})

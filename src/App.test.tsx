@@ -57,3 +57,36 @@ it('builds the letter from the form and enables download once complete', async (
     expect(downloadPdf).toHaveBeenCalledWith(expect.objectContaining({ recipient: ['Telefonica GmbH', 'Postfach 1', '90345 Nürnberg'] })),
   )
 })
+
+it('blocks the download and names every missing required field, in the UI language', async () => {
+  const user = userEvent.setup()
+  render(<App />)
+  const button = screen.getByRole('button', { name: 'Download PDF' })
+  expect(button).toBeDisabled()
+  expect(button).toHaveAccessibleDescription(
+    'Still needed: Your name, Your address (street, postcode city), Provider name, Provider address, Customer or contract number, Place (for the date line)',
+  )
+
+  await user.click(screen.getByRole('button', { name: 'Deutsch' }))
+  expect(screen.getByRole('button', { name: 'PDF herunterladen' })).toHaveAccessibleDescription(/^Bitte noch ausfüllen: Ihr Name, /)
+  await user.click(screen.getByRole('button', { name: 'English' }))
+
+  await user.type(screen.getByLabelText('Your name'), 'Jana Müller')
+  await user.type(screen.getByLabelText('Your address (street, postcode city)'), 'Lindenstraße 5')
+  await user.type(screen.getByLabelText('Provider name'), 'FitWerk GmbH')
+  await user.type(screen.getByLabelText('Provider address'), 'Sportweg 1')
+  await user.type(screen.getByLabelText('Customer or contract number'), '4711')
+  expect(button).toHaveAccessibleDescription('Still needed: Place (for the date line)')
+
+  // whitespace alone does not count as filled in
+  await user.type(screen.getByLabelText('Place (for the date line)'), '   ')
+  expect(button).toBeDisabled()
+  await user.type(screen.getByLabelText('Place (for the date line)'), 'Berlin')
+  expect(button).toBeEnabled()
+  expect(button).toHaveAccessibleDescription('')
+
+  await user.click(screen.getByLabelText('Extraordinary / special right to cancel'))
+  await user.selectOptions(screen.getByLabelText('Reason'), 'Other reason')
+  expect(button).toBeDisabled()
+  expect(button).toHaveAccessibleDescription('Still needed: Reason in your own words (in German)')
+})

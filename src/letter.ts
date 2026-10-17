@@ -88,8 +88,8 @@ export function buildLetter(d: LetterData, today = new Date()): Letter {
     ordinary: `${what} ordentlich und fristgerecht zum nächstmöglichen Termin.`,
     date: `${what} ordentlich und fristgerecht zum ${d.endDate && formatDate(parseDate(d.endDate))}, hilfsweise zum nächstmöglichen Termin.`,
     extraordinary: `${what} außerordentlich zum frühestmöglichen Zeitpunkt, hilfsweise ordentlich zum nächstmöglichen Termin.`,
-  }[d.terminationType]
-  const reason = d.reason === 'other' ? `Grund der Kündigung: ${d.reasonText.trim()}` : REASON[d.reason]
+  }[d.terminationType === 'date' && !d.endDate ? 'ordinary' : d.terminationType] // no "zum ," while the date is blank
+  const reason = d.reason === 'other' ? d.reasonText.trim() && `Grund der Kündigung: ${d.reasonText.trim()}` : REASON[d.reason]
 
   return {
     sender: [d.senderName.trim(), ...lines(d.senderAddress)],
@@ -99,7 +99,7 @@ export function buildLetter(d: LetterData, today = new Date()): Letter {
     paragraphs: [
       'Sehr geehrte Damen und Herren,',
       termination,
-      ...(d.terminationType === 'extraordinary' ? [reason] : []),
+      ...(d.terminationType === 'extraordinary' && reason ? [reason] : []),
       ...(d.revokeSepa ? ['Das Ihnen erteilte SEPA-Lastschriftmandat widerrufe ich zum Zeitpunkt der Vertragsbeendigung.'] : []),
       ...(d.revokeConsent
         ? ['Zudem widerrufe ich mit sofortiger Wirkung meine Einwilligung zur Nutzung meiner Daten für Werbezwecke und zur Kontaktaufnahme zu Werbezwecken.']

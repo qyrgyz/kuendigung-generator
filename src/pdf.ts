@@ -33,7 +33,22 @@ export function letterPdf(l: Letter): jsPDF {
   return doc
 }
 
+const UMLAUT: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', Ä: 'Ae', Ö: 'Oe', Ü: 'Ue', ß: 'ss' }
+const fileSafe = (s: string) =>
+  s
+    .replace(/[äöüÄÖÜß]/g, (c) => UMLAUT[c])
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '') // é -> e
+    .replace(/[^A-Za-z0-9-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+// Own <a download> instead of jsPDF's save(): that no-ops under jsdom and writes to disk under its Node build
 export function downloadPdf(l: Letter): void {
-  const name = l.recipient[0].replace(/[^A-Za-z0-9-]+/g, '_')
-  letterPdf(l).save(`Kuendigung_${name}.pdf`)
+  const name = fileSafe(l.recipient[0])
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(letterPdf(l).output('blob'))
+  a.download = `Kuendigung${name && `_${name}`}.pdf`
+  a.rel = 'noopener'
+  setTimeout(() => a.click(), 0) // deferred like jsPDF/FileSaver; a synchronous click() downloaded ~45 s late in the embedded browser
+  setTimeout(() => URL.revokeObjectURL(a.href), 40_000) // some browsers read the blob after click() returns
 }
