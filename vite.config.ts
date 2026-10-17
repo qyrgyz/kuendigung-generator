@@ -8,6 +8,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
+    // userEvent typing tests take ~2 s alone and near 5 s under coverage in parallel
+    testTimeout: 15_000,
     coverage: {
       include: ['src/**'],
       exclude: ['src/**/*.test.*', 'src/test-*.ts', 'src/main.tsx'],

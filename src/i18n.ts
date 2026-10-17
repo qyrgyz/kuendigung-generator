@@ -4,6 +4,9 @@ export type Lang = 'de' | 'en'
 
 const de = {
   title: 'Kündigungsschreiben erstellen',
+  subtitle: 'In wenigen Minuten ein vollständiges Kündigungsschreiben auf Deutsch – als PDF zum Ausdrucken.',
+  privacy: 'Ihre Daten bleiben in Ihrem Browser und werden nirgendwohin gesendet.',
+  sections: { you: 'Ihre Angaben', provider: 'Anbieter und Vertrag' },
   switchLabel: 'English',
   disclaimerTitle: 'Keine Rechtsberatung.',
   disclaimer:
@@ -53,6 +56,9 @@ const de = {
 
 const en: typeof de = {
   title: 'Create a cancellation letter',
+  subtitle: 'A complete German cancellation letter in a few minutes, as a PDF ready to print.',
+  privacy: 'Your data stays in your browser and is never sent anywhere.',
+  sections: { you: 'Your details', provider: 'Provider and contract' },
   switchLabel: 'Deutsch',
   disclaimerTitle: 'Not legal advice.',
   disclaimer:

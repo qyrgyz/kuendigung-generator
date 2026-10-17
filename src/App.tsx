@@ -67,8 +67,17 @@ export default function App() {
   return (
     <main lang={lang}>
       <header>
-        <h1>{t.title}</h1>
-        <button type="button" lang={lang === 'de' ? 'en' : 'de'} onClick={() => setLang(lang === 'de' ? 'en' : 'de')}>
+        <div>
+          <h1>{t.title}</h1>
+          <p className="lead">{t.subtitle}</p>
+          <p className="badge">{t.privacy}</p>
+        </div>
+        <button
+          type="button"
+          className="secondary"
+          lang={lang === 'de' ? 'en' : 'de'}
+          onClick={() => setLang(lang === 'de' ? 'en' : 'de')}
+        >
           {t.switchLabel}
         </button>
       </header>
@@ -87,27 +96,35 @@ export default function App() {
           <p className="hint" aria-hidden="true">
             {t.requiredHint}
           </p>
-          {textField('senderName')}
-          {textField('senderAddress', 2)}
-          {textField('providerName')}
-          {textField('providerAddress', 2)}
-          <p>
-            <label htmlFor="contractType">{t.fields.contractType}</label>
-            <select
-              id="contractType"
-              value={data.contractType}
-              onChange={(e) => set('contractType', e.target.value as LetterData['contractType'])}
-            >
-              {CONTRACT_TYPES.map((c) => (
-                <option key={c} value={c}>
-                  {t.contractTypes[c]}
-                </option>
-              ))}
-            </select>
-          </p>
-          {textField('contractNumber')}
+          <fieldset>
+            <legend>{t.sections.you}</legend>
+            {textField('senderName')}
+            {textField('senderAddress', 2)}
+            {textField('place')}
+          </fieldset>
 
           <fieldset>
+            <legend>{t.sections.provider}</legend>
+            {textField('providerName')}
+            {textField('providerAddress', 2)}
+            <p>
+              <label htmlFor="contractType">{t.fields.contractType}</label>
+              <select
+                id="contractType"
+                value={data.contractType}
+                onChange={(e) => set('contractType', e.target.value as LetterData['contractType'])}
+              >
+                {CONTRACT_TYPES.map((c) => (
+                  <option key={c} value={c}>
+                    {t.contractTypes[c]}
+                  </option>
+                ))}
+              </select>
+            </p>
+            {textField('contractNumber')}
+          </fieldset>
+
+          <fieldset className="choices">
             <legend>{t.fields.terminationType}</legend>
             {(['ordinary', 'date', 'extraordinary'] as const).map((tt) => (
               <label key={tt} className="choice">
@@ -151,7 +168,7 @@ export default function App() {
             )}
           </fieldset>
 
-          <fieldset>
+          <fieldset className="choices">
             <legend>{t.optional}</legend>
             {(['revokeSepa', 'revokeConsent'] as const).map((k) => (
               <label key={k} className="choice">
@@ -161,9 +178,7 @@ export default function App() {
             ))}
           </fieldset>
 
-          {textField('place')}
-
-          <button type="button" onClick={download}>
+          <button type="button" className="primary" onClick={download}>
             {t.download}
           </button>
           {showErrors && (
@@ -181,7 +196,7 @@ export default function App() {
           </aside>
         </form>
 
-        <section aria-labelledby="preview-title">
+        <section className="preview-pane" aria-labelledby="preview-title">
           <h2 id="preview-title">{t.preview}</h2>
           <p className="hint">{t.previewNote}</p>
           <Preview letter={letter} />
