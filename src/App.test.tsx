@@ -108,3 +108,19 @@ it('marks required fields visually and names the new-tab link for screen readers
   expect(screen.getByRole('textbox', { name: 'Your name' })).toHaveAttribute('autocomplete', 'name')
   expect(screen.getByRole('link', { name: /Verbraucherzentrale .*\(opens in a new tab\)/ })).toHaveAttribute('target', '_blank')
 })
+
+it('dates the letter on the day of the download, even if the tab stayed open overnight', async () => {
+  vi.mocked(downloadPdf).mockClear()
+  vi.useFakeTimers({ toFake: ['Date'] }) // only the clock; userEvent keeps real timers
+  vi.setSystemTime(new Date(2026, 9, 17, 23, 50))
+  try {
+    const user = userEvent.setup()
+    render(<App />)
+    await fillRequired(user)
+    vi.setSystemTime(new Date(2026, 9, 18, 8, 0))
+    await user.click(screen.getByRole('button', { name: 'Download PDF' }))
+    await vi.waitFor(() => expect(downloadPdf).toHaveBeenCalledWith(expect.objectContaining({ dateLine: 'Berlin, 18.10.2026' })))
+  } finally {
+    vi.useRealTimers()
+  }
+})

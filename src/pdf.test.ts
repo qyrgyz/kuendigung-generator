@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest'
 import { buildLetter, EMPTY_LETTER_DATA, type LetterData } from './letter'
 import { downloadPdf, letterPdf } from './pdf'
-import { pdfText } from './test-pdf-text'
+import { pdfPages, pdfText } from './test-pdf-text'
 
 const text = async (d: Partial<LetterData>) =>
   pdfText(letterPdf(buildLetter({ ...EMPTY_LETTER_DATA, contractNumber: '4711', place: 'Berlin', ...d })).output('arraybuffer'))
@@ -38,4 +38,27 @@ it.each([
   downloadPdf(buildLetter({ ...EMPTY_LETTER_DATA, providerName: provider }))
   await vi.waitFor(() => expect((click.mock.contexts[0] as HTMLAnchorElement)?.download).toBe(file))
   click.mockRestore()
+})
+
+it('flows a long letter onto a second page and keeps the closing together', async () => {
+  const letter = buildLetter({
+    ...EMPTY_LETTER_DATA,
+    senderName: 'Jana Müller',
+    senderAddress: 'Lindenstraße 5\n10115 Berlin',
+    providerName: 'FitWerk GmbH',
+    providerAddress: 'Sportweg 1\n10117 Berlin',
+    contractNumber: '4711',
+    place: 'Berlin',
+    terminationType: 'extraordinary',
+    reason: 'other',
+    reasonText: 'Das Studio ist seit Monaten wegen Renovierung geschlossen und die Kurse finden nicht statt. '.repeat(14) + 'ENDE.',
+    revokeConsent: true,
+  })
+  const pages = await pdfPages(letterPdf(letter).output('arraybuffer'))
+  expect(pages.length).toBe(2)
+  const all = pages.join('\n')
+  expect(all).toContain('ENDE.')
+  expect(all).toContain('Bitte bestätigen Sie mir den Eingang')
+  const closingPage = pages.find((p) => p.includes('Mit freundlichen Grüßen'))!
+  expect(closingPage.trimEnd().endsWith('Jana Müller')).toBe(true)
 })

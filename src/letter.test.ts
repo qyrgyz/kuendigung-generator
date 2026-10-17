@@ -161,3 +161,12 @@ describe('fixed end date', () => {
     expect(isoDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05')
   })
 })
+
+describe('preview of an empty form', () => {
+  it('shows placeholders instead of broken punctuation', () => {
+    const l = buildLetter(EMPTY_LETTER_DATA, today)
+    expect(l.subject).toBe('Kündigung Mitgliedschaft – Kunden-/Vertragsnummer …')
+    expect(l.paragraphs[1]).toContain('(Kunden-/Vertragsnummer …)')
+    expect(l.dateLine).toBe('…, 17.10.2026')
+  })
+})

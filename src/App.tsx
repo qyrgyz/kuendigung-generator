@@ -25,15 +25,18 @@ export default function App() {
     showErrors && missing.includes(k) ? { 'aria-invalid': true, 'aria-describedby': 'missing' } : {}
 
   const download = async () => {
-    if (missing.length > 0) {
+    // use the clock at click time: the tab may have stayed open past midnight since the last render
+    const now = new Date()
+    const missingNow = missingFields(data, now)
+    if (missingNow.length > 0) {
       setAttempted(true)
-      document.getElementById(missing[0])?.focus()
+      document.getElementById(missingNow[0])?.focus()
       return
     }
     try {
       setDownloadFailed(false)
       const { downloadPdf } = await import('./pdf')
-      downloadPdf(letter)
+      downloadPdf(buildLetter(data, now))
     } catch {
       // e.g. offline, or a stale chunk after a redeploy
       setDownloadFailed(true)

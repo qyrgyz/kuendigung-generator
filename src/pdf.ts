@@ -8,6 +8,8 @@ const LEFT = 25
 const RIGHT = 190
 const WIDTH = RIGHT - LEFT
 const LINE = 5
+const TOP = 20
+const BOTTOM = 277 // 20 mm bottom margin on 297 mm A4
 // Noto Sans subset (Latin, Latin Extended A/B and Additional, see src/fonts): built-in Helvetica only covers
 // WinAnsi, so names like Łukasz or Şahin came out garbled. Inlined here, so it ships only in this lazy chunk.
 const FONT = 'NotoSans'
@@ -22,7 +24,7 @@ export function letterPdf(l: Letter): jsPDF {
   doc.setFont(FONT, 'normal')
   doc.setFontSize(11)
 
-  doc.text(l.sender, LEFT, 20, { lineHeightFactor: 1.3 })
+  doc.text(l.sender, LEFT, TOP, { lineHeightFactor: 1.3 })
   doc.text(l.recipient, LEFT, 50, { lineHeightFactor: 1.3 }) // inside the envelope window
   doc.text(l.dateLine, RIGHT, 100, { align: 'right' })
 
@@ -30,12 +32,23 @@ export function letterPdf(l: Letter): jsPDF {
   doc.text(l.subject, LEFT, 112, { maxWidth: WIDTH })
   doc.setFont(FONT, 'normal')
 
+  // long letters (e.g. a long own reason) continue on a new page instead of running off the bottom
   let y = 125
-  for (const p of l.paragraphs) {
-    const wrapped: string[] = doc.splitTextToSize(p, WIDTH)
-    doc.text(wrapped, LEFT, y)
-    y += wrapped.length * LINE + LINE
+  const newPageIfBelow = (bottom: number) => {
+    if (bottom > BOTTOM) {
+      doc.addPage()
+      y = TOP
+    }
   }
+  for (const p of l.paragraphs) {
+    for (const line of doc.splitTextToSize(p, WIDTH) as string[]) {
+      newPageIfBelow(y)
+      doc.text(line, LEFT, y)
+      y += LINE
+    }
+    y += LINE
+  }
+  newPageIfBelow(y + (l.closing.length - 1) * LINE) // keep greeting and signature on one page
   for (const c of l.closing) {
     doc.text(c, LEFT, y)
     y += LINE

@@ -87,7 +87,9 @@ const parseDate = (s: string) => {
 
 /** Pure: form data -> German letter text. Shared by the preview and the PDF (ADR-0002). */
 export function buildLetter(d: LetterData, today = new Date()): Letter {
-  const nr = d.contractNumber.trim()
+  // '…' only shows in the live preview: the download stays blocked until these are filled in
+  const nr = d.contractNumber.trim() || '…'
+  const place = d.place.trim() || '…'
   const { noun, acc } = CONTRACT[d.contractType]
   const what = `hiermit kündige ich ${acc} (Kunden-/Vertragsnummer ${nr})`
   // ADR-0004: always fall back to the next possible date instead of computing one
@@ -101,7 +103,7 @@ export function buildLetter(d: LetterData, today = new Date()): Letter {
   return {
     sender: [d.senderName.trim(), ...lines(d.senderAddress)],
     recipient: [d.providerName.trim(), ...lines(d.providerAddress)],
-    dateLine: `${d.place.trim()}, ${formatDate(today)}`,
+    dateLine: `${place}, ${formatDate(today)}`,
     subject: `Kündigung ${noun} – Kunden-/Vertragsnummer ${nr}`,
     paragraphs: [
       'Sehr geehrte Damen und Herren,',
