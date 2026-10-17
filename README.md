@@ -49,4 +49,5 @@ Pushing to `main` deploys to GitHub Pages (see `.github/workflows/deploy.yml`).
 
 ## Licences
 
-The bundled Noto Sans subset is licensed under the SIL Open Font License 1.1 (`src/fonts/OFL.txt`).
+The code is released under the [MIT License](LICENSE). The bundled Noto Sans subset is licensed under the
+SIL Open Font License 1.1 (`src/fonts/OFL.txt`).
