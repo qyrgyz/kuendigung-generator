@@ -2,7 +2,11 @@
   "name": "kuendigung-generator",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -31,6 +35,5 @@
     "typescript": "~6.0.2",
     "vite": "^6.3.5",
     "vitest": "^3.2.7"
-  },
-  "license": "MIT"
+  }
 }

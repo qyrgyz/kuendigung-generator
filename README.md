@@ -24,6 +24,8 @@ PDF, and asserts that no network request or storage write happened.
 
 ## Development
 
+Requires [Node.js](https://nodejs.org/) 20 or newer.
+
 ```bash
 npm install
 npm run dev        # http://localhost:5173
