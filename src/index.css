@@ -2,6 +2,7 @@
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
   line-height: 1.5;
+  --error: light-dark(#b3261e, #ff8a80);
 }
 body { margin: 0; }
 main { max-width: 1100px; margin: 0 auto; padding: 16px; }
@@ -12,10 +13,13 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 label { display: block; font-weight: 600; }
 label.choice { font-weight: normal; display: flex; gap: 8px; align-items: baseline; margin: 4px 0; }
 input:not([type='radio'], [type='checkbox']), textarea, select { width: 100%; box-sizing: border-box; font: inherit; padding: 6px; }
+[aria-invalid='true'] { outline: 2px solid var(--error); outline-offset: 1px; }
+:focus-visible { outline: 3px solid light-dark(#1a5fb4, #99c1f1); outline-offset: 2px; }
 fieldset { margin: 0 0 16px; }
 button { font: inherit; padding: 8px 16px; }
-#missing { color: #c33; }
-.hint { margin-top: 0; opacity: 0.75; }
+#missing, .error { color: var(--error); font-weight: 600; }
+.hint { margin-top: 0; opacity: 0.8; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .preview { background: #fff; color: #111; padding: 32px; box-shadow: 0 1px 4px #0003; font-family: Helvetica, Arial, sans-serif; }
 .preview p { white-space: pre-line; }
 .preview .date { text-align: right; }

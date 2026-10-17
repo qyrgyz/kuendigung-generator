@@ -19,7 +19,7 @@ const de = {
     contractType: 'Vertragsart',
     contractNumber: 'Kunden- oder Vertragsnummer',
     terminationType: 'Art der Kündigung',
-    endDate: 'Kündigen zum',
+    endDate: 'Kündigen zum (Datum in der Zukunft)',
     reason: 'Grund',
     reasonText: 'Grund in eigenen Worten (auf Deutsch)',
     revokeSepa: 'SEPA-Lastschriftmandat widerrufen',
@@ -44,7 +44,10 @@ const de = {
   optional: 'Optionale Zusätze',
   download: 'PDF herunterladen',
   missing: 'Bitte noch ausfüllen:',
+  downloadFailed: 'Das PDF konnte nicht erstellt werden. Bitte laden Sie die Seite neu und versuchen Sie es noch einmal.',
   preview: 'Vorschau',
+  requiredHint: '* Pflichtfeld',
+  newTab: '(öffnet in neuem Tab)',
   previewNote: 'Das Schreiben ist immer auf Deutsch.',
 }
 
@@ -65,7 +68,7 @@ const en: typeof de = {
     contractType: 'Contract type',
     contractNumber: 'Customer or contract number',
     terminationType: 'Type of cancellation',
-    endDate: 'Cancel on',
+    endDate: 'Cancel on (a future date)',
     reason: 'Reason',
     reasonText: 'Reason in your own words (in German)',
     revokeSepa: 'Revoke SEPA direct-debit mandate',
@@ -90,7 +93,10 @@ const en: typeof de = {
   optional: 'Optional additions',
   download: 'Download PDF',
   missing: 'Still needed:',
+  downloadFailed: 'The PDF could not be created. Please reload the page and try again.',
   preview: 'Preview',
+  requiredHint: '* Required',
+  newTab: '(opens in a new tab)',
   previewNote: 'The letter is always in German.',
 }
 

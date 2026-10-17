@@ -1,28 +1,68 @@
 import { useState } from 'react'
 import { STRINGS, type Lang } from './i18n'
-import { buildLetter, CONTRACT_TYPES, EMPTY_LETTER_DATA, missingFields, type Letter, type LetterData } from './letter'
+import { buildLetter, CONTRACT_TYPES, EMPTY_LETTER_DATA, isoDate, missingFields, type Letter, type LetterData } from './letter'
 
 type TextKey = 'senderName' | 'senderAddress' | 'providerName' | 'providerAddress' | 'contractNumber' | 'place' | 'reasonText'
+
+// WCAG 1.3.5: identify the purpose of fields about the user themselves
+const AUTOCOMPLETE: Partial<Record<TextKey, string>> = { senderName: 'name', senderAddress: 'street-address', place: 'address-level2' }
 
 // Form data lives only in React state: never stored or sent anywhere (ADR-0001)
 export default function App() {
   const [lang, setLang] = useState<Lang>(() => (navigator.language.startsWith('de') ? 'de' : 'en'))
   const [data, setData] = useState(EMPTY_LETTER_DATA)
+  // errors show only after a download attempt, so typing is not interrupted by announcements
+  const [attempted, setAttempted] = useState(false)
+  const [downloadFailed, setDownloadFailed] = useState(false)
   const t = STRINGS[lang]
   const letter = buildLetter(data)
   const missing = missingFields(data)
+  const showErrors = attempted && missing.length > 0
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
   const set = <K extends keyof LetterData>(k: K, v: LetterData[K]) => setData((d) => ({ ...d, [k]: v }))
+  const errorProps = (k: keyof LetterData) =>
+    showErrors && missing.includes(k) ? { 'aria-invalid': true, 'aria-describedby': 'missing' } : {}
 
-  const textField = (k: TextKey, rows?: number) => (
-    <p>
-      <label htmlFor={k}>{t.fields[k]}</label>
-      {rows ? (
-        <textarea id={k} rows={rows} required value={data[k]} onChange={(e) => set(k, e.target.value)} />
-      ) : (
-        <input id={k} required value={data[k]} onChange={(e) => set(k, e.target.value)} />
-      )}
-    </p>
+  const download = async () => {
+    if (missing.length > 0) {
+      setAttempted(true)
+      document.getElementById(missing[0])?.focus()
+      return
+    }
+    try {
+      setDownloadFailed(false)
+      const { downloadPdf } = await import('./pdf')
+      downloadPdf(letter)
+    } catch {
+      // e.g. offline, or a stale chunk after a redeploy
+      setDownloadFailed(true)
+    }
+  }
+
+  const label = (k: keyof LetterData) => (
+    <label htmlFor={k}>
+      {t.fields[k]}
+      <span aria-hidden="true"> *</span>
+    </label>
   )
+
+  const textField = (k: TextKey, rows?: number) => {
+    const props = {
+      id: k,
+      required: true,
+      value: data[k],
+      autoComplete: AUTOCOMPLETE[k],
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => set(k, e.target.value),
+      ...errorProps(k),
+    }
+    return (
+      <p>
+        {label(k)}
+        {rows ? <textarea rows={rows} {...props} /> : <input {...props} />}
+      </p>
+    )
+  }
 
   return (
     <main lang={lang}>
@@ -37,12 +77,16 @@ export default function App() {
         <strong>{t.disclaimerTitle}</strong> {t.disclaimer}{' '}
         <a href="https://www.verbraucherzentrale.de/" target="_blank" rel="noopener noreferrer">
           {t.consumerCentre}
+          <span className="sr-only"> {t.newTab}</span>
         </a>
         .
       </aside>
 
       <div className="layout">
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={(e) => e.preventDefault()} noValidate>
+          <p className="hint" aria-hidden="true">
+            {t.requiredHint}
+          </p>
           {textField('senderName')}
           {textField('senderAddress', 2)}
           {textField('providerName')}
@@ -78,8 +122,16 @@ export default function App() {
             ))}
             {data.terminationType === 'date' && (
               <p>
-                <label htmlFor="endDate">{t.fields.endDate}</label>
-                <input id="endDate" type="date" required value={data.endDate} onChange={(e) => set('endDate', e.target.value)} />
+                {label('endDate')}
+                <input
+                  id="endDate"
+                  type="date"
+                  required
+                  min={isoDate(tomorrow)}
+                  value={data.endDate}
+                  onChange={(e) => set('endDate', e.target.value)}
+                  {...errorProps('endDate')}
+                />
               </p>
             )}
             {data.terminationType === 'extraordinary' && (
@@ -111,12 +163,19 @@ export default function App() {
 
           {textField('place')}
 
-          <button type="button" disabled={missing.length > 0} aria-describedby="missing" onClick={async () => (await import('./pdf')).downloadPdf(letter)}>
+          <button type="button" onClick={download}>
             {t.download}
           </button>
-          <p id="missing" aria-live="polite">
-            {missing.length > 0 && `${t.missing} ${missing.map((k) => t.fields[k]).join(', ')}`}
-          </p>
+          {showErrors && (
+            <p id="missing" role="alert">
+              {t.missing} {missing.map((k) => t.fields[k]).join(', ')}
+            </p>
+          )}
+          {downloadFailed && (
+            <p className="error" role="alert">
+              {t.downloadFailed}
+            </p>
+          )}
           <aside className="note">
             <strong>{t.tipTitle}</strong> {t.tip}
           </aside>

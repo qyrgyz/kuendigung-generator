@@ -26,3 +26,4 @@ dist-ssr
 # generated letters can contain personal data
 *.pdf
 coverage
+*.stackdump

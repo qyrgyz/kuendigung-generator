@@ -7,8 +7,12 @@ import { pdfText } from './test-pdf-text'
 // No mock of ./pdf here: the real jsPDF code runs and hands a Blob to the browser download
 afterEach(() => vi.restoreAllMocks())
 
-it('clicking the download button produces a PDF file named after the provider', async () => {
+it('clicking the download button produces a PDF file, without sending or storing anything', async () => {
   const blobs: Blob[] = []
+  // privacy (ADR-0001): filling in the form and downloading sends nothing and stores nothing
+  const fetchSpy = vi.spyOn(globalThis, 'fetch')
+  const xhrSpy = vi.spyOn(XMLHttpRequest.prototype, 'open')
+  const storageSpy = vi.spyOn(Storage.prototype, 'setItem')
   URL.createObjectURL = vi.fn((b: Blob) => (blobs.push(b), 'blob:pdf'))
   URL.revokeObjectURL = vi.fn()
   const clicked: HTMLAnchorElement[] = []
@@ -19,15 +23,20 @@ it('clicking the download button produces a PDF file named after the provider', 
 
   const user = userEvent.setup()
   render(<App />)
-  await user.type(screen.getByLabelText('Your name'), 'Jürgen Weiß')
-  await user.type(screen.getByLabelText('Your address (street, postcode city)'), 'Große Straße 3{enter}80331 München')
-  await user.type(screen.getByLabelText('Provider name'), 'Ökostrom Süd GmbH')
-  await user.type(screen.getByLabelText('Provider address'), 'Äußere Ringstraße 9{enter}70173 Stuttgart')
-  await user.type(screen.getByLabelText('Customer or contract number'), 'K-123')
-  await user.type(screen.getByLabelText('Place (for the date line)'), 'München')
+  await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Jürgen Weiß')
+  await user.type(screen.getByRole('textbox', { name: 'Your address (street, postcode city)' }), 'Große Straße 3{enter}80331 München')
+  await user.type(screen.getByRole('textbox', { name: 'Provider name' }), 'Ökostrom Süd GmbH')
+  await user.type(screen.getByRole('textbox', { name: 'Provider address' }), 'Äußere Ringstraße 9{enter}70173 Stuttgart')
+  await user.type(screen.getByRole('textbox', { name: 'Customer or contract number' }), 'K-123')
+  await user.type(screen.getByRole('textbox', { name: 'Place (for the date line)' }), 'München')
   await user.click(screen.getByRole('button', { name: 'Download PDF' }))
 
   await vi.waitFor(() => expect(blobs).toHaveLength(1), { timeout: 5000 })
+  expect(fetchSpy).not.toHaveBeenCalled()
+  expect(xhrSpy).not.toHaveBeenCalled()
+  expect(storageSpy).not.toHaveBeenCalled()
+  expect(document.cookie).toBe('')
+
   // jsdom's Blob has no arrayBuffer(), so read it with FileReader
   const bytes = await new Promise<ArrayBuffer>((resolve) => {
     const r = new FileReader()

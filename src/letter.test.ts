@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildLetter, EMPTY_LETTER_DATA, missingFields, type LetterData } from './letter'
+import { buildLetter, EMPTY_LETTER_DATA, isoDate, missingFields, type LetterData } from './letter'
 
 const data: LetterData = {
   ...EMPTY_LETTER_DATA,
@@ -51,7 +51,9 @@ describe('buildLetter', () => {
     const price = text({ terminationType: 'extraordinary', reason: 'priceIncrease' })
     expect(price).toContain('außerordentlich zum frühestmöglichen Zeitpunkt, hilfsweise ordentlich zum nächstmöglichen Termin.')
     expect(price).toContain('Preiserhöhung')
-    expect(text({ terminationType: 'extraordinary', reason: 'move' })).toContain('Sonderkündigungsrecht wegen Umzugs')
+    expect(text({ terminationType: 'extraordinary', reason: 'move' })).toContain('Anlass der Kündigung ist mein Umzug.')
+    // facts only: the letter must not claim a special right the user may not have (ADR-0004)
+    expect(price).not.toContain('Sonderkündigungsrecht')
     expect(text({ terminationType: 'extraordinary', reason: 'other', reasonText: ' Studio geschlossen ' })).toContain(
       'Grund der Kündigung: Studio geschlossen',
     )
@@ -78,7 +80,8 @@ describe('missingFields', () => {
   })
 
   it('requires the date or reason text only when relevant', () => {
-    expect(missingFields({ ...data, terminationType: 'date' })).toEqual(['endDate'])
+    expect(missingFields({ ...data, terminationType: 'date' }, today)).toEqual(['endDate'])
+    expect(missingFields({ ...data, terminationType: 'date', endDate: '2026-10-18' }, today)).toEqual([])
     expect(missingFields({ ...data, terminationType: 'extraordinary', reason: 'other' })).toEqual(['reasonText'])
     expect(missingFields({ ...data, terminationType: 'extraordinary', reason: 'move' })).toEqual([])
   })
@@ -142,5 +145,19 @@ describe('umlauts and ß', () => {
     expect(l.subject).toContain('ÜÄÖ-ß1')
     expect(l.paragraphs).toContain('Grund der Kündigung: Schließung der Filiale')
     expect(l.closing.at(-1)).toBe('Jürgen Weiß')
+  })
+})
+
+describe('fixed end date', () => {
+  it('must lie after today', () => {
+    const d = { ...data, terminationType: 'date' } as const
+    expect(missingFields({ ...d, endDate: '2026-10-16' }, today)).toEqual(['endDate'])
+    expect(missingFields({ ...d, endDate: '2026-10-17' }, today)).toEqual(['endDate'])
+    expect(missingFields({ ...d, endDate: '2026-10-18' }, today)).toEqual([])
+    expect(missingFields({ ...d, endDate: '2026-12-01' }, today)).toEqual([])
+  })
+
+  it('isoDate uses the local calendar day, zero-padded', () => {
+    expect(isoDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05')
   })
 })

@@ -57,16 +57,23 @@ const CONTRACT: Record<ContractType, { noun: string; acc: string }> = {
   electricity: { noun: 'Stromliefervertrag', acc: 'meinen Stromliefervertrag' },
 }
 
+// State the facts only: whether they create a special right to cancel depends on the contract and law
+// (e.g. moving house generally does not for gyms, BGH XII ZR 62/15), so the letter must not claim one (ADR-0004).
 const REASON: Record<Exclude<Reason, 'other'>, string> = {
-  priceIncrease: 'Sie haben eine Preiserhöhung angekündigt. Ich mache von meinem Sonderkündigungsrecht Gebrauch.',
-  move: 'Ich ziehe um. Ich mache von meinem Sonderkündigungsrecht wegen Umzugs Gebrauch.',
+  priceIncrease: 'Anlass der Kündigung ist die von Ihnen angekündigte Preiserhöhung.',
+  move: 'Anlass der Kündigung ist mein Umzug.',
 }
 
-export function missingFields(d: LetterData): (keyof LetterData)[] {
+/** Local YYYY-MM-DD, the format <input type="date"> uses, so dates compare as strings. */
+export const isoDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+/** Required fields that are blank; a fixed end date counts as missing unless it is after today. */
+export function missingFields(d: LetterData, today = new Date()): (keyof LetterData)[] {
   const required: (keyof LetterData)[] = ['senderName', 'senderAddress', 'providerName', 'providerAddress', 'contractNumber', 'place']
   if (d.terminationType === 'date') required.push('endDate')
   if (d.terminationType === 'extraordinary' && d.reason === 'other') required.push('reasonText')
-  return required.filter((k) => !String(d[k]).trim())
+  return required.filter((k) => !String(d[k]).trim() || (k === 'endDate' && d.endDate <= isoDate(today)))
 }
 
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean)
