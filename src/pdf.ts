@@ -1,24 +1,34 @@
 import { jsPDF } from 'jspdf'
+import bold from './fonts/NotoSans-Bold.ttf?inline'
+import regular from './fonts/NotoSans-Regular.ttf?inline'
 import type { Letter } from './letter'
 
-// DIN 5008 (Form B) positions in mm; built-in Helvetica uses WinAnsi, which covers ä ö ü ß
+// DIN 5008 (Form B) positions in mm
 const LEFT = 25
 const RIGHT = 190
 const WIDTH = RIGHT - LEFT
 const LINE = 5
+// Noto Sans subset (Latin, Latin Extended A/B and Additional, see src/fonts): built-in Helvetica only covers
+// WinAnsi, so names like Łukasz or Şahin came out garbled. Inlined here, so it ships only in this lazy chunk.
+const FONT = 'NotoSans'
+const base64 = (dataUrl: string) => dataUrl.slice(dataUrl.indexOf(',') + 1)
 
 export function letterPdf(l: Letter): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  doc.setFont('helvetica', 'normal')
+  doc.addFileToVFS('NotoSans-Regular.ttf', base64(regular))
+  doc.addFont('NotoSans-Regular.ttf', FONT, 'normal')
+  doc.addFileToVFS('NotoSans-Bold.ttf', base64(bold))
+  doc.addFont('NotoSans-Bold.ttf', FONT, 'bold')
+  doc.setFont(FONT, 'normal')
   doc.setFontSize(11)
 
   doc.text(l.sender, LEFT, 20, { lineHeightFactor: 1.3 })
   doc.text(l.recipient, LEFT, 50, { lineHeightFactor: 1.3 }) // inside the envelope window
   doc.text(l.dateLine, RIGHT, 100, { align: 'right' })
 
-  doc.setFont('helvetica', 'bold')
+  doc.setFont(FONT, 'bold')
   doc.text(l.subject, LEFT, 112, { maxWidth: WIDTH })
-  doc.setFont('helvetica', 'normal')
+  doc.setFont(FONT, 'normal')
 
   let y = 125
   for (const p of l.paragraphs) {
@@ -33,10 +43,11 @@ export function letterPdf(l: Letter): jsPDF {
   return doc
 }
 
-const UMLAUT: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', Ä: 'Ae', Ö: 'Oe', Ü: 'Ue', ß: 'ss' }
+// letters NFKD does not split into base letter + accent
+const ASCII: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', Ä: 'Ae', Ö: 'Oe', Ü: 'Ue', ß: 'ss', ł: 'l', Ł: 'L', đ: 'd', Đ: 'D', ø: 'o', Ø: 'O' }
 const fileSafe = (s: string) =>
   s
-    .replace(/[äöüÄÖÜß]/g, (c) => UMLAUT[c])
+    .replace(/[äöüÄÖÜßłŁđĐøØ]/g, (c) => ASCII[c])
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '') // é -> e
     .replace(/[^A-Za-z0-9-]+/g, '_')

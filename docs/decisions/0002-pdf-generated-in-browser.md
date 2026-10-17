@@ -11,3 +11,4 @@
 - \+ Works offline; preview and PDF come from one source.
 - − Adds a PDF library to the bundle; umlauts and ß need a font that has them.
 - Risk: the PDF drifts from the preview. Mitigation: a test that compares the PDF text with the preview.
+- Amended 2026-10-17: embeds a Noto Sans subset (Latin Ext. A/B + Additional, OFL, `src/fonts/`) because built-in Helvetica garbled names like Łukasz or Şahin; costs +154 kB gzip in the lazy PDF chunk only.
