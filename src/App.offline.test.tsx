@@ -16,10 +16,10 @@ it('tells the user when the PDF cannot be created', async () => {
     ['Your address (street, postcode city)', 'Lindenstraße 5'],
     ['Provider name', 'FitWerk GmbH'],
     ['Provider address', 'Sportweg 1'],
-    ['Customer or contract number', '4711'],
+    ['Membership number', '4711'],
     ['Place (for the date line)', 'Berlin'],
   ])
-    await user.type(screen.getByRole('textbox', { name }), value)
+    await user.type(screen.getByRole(name === 'Provider name' ? 'combobox' : 'textbox', { name }), value)
   await user.click(screen.getByRole('button', { name: 'Download PDF' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('The PDF could not be created. Please reload the page and try again.')
 })

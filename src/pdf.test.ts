@@ -13,7 +13,7 @@ it('produces a PDF whose extracted text keeps umlauts and ß', async () => {
     providerName: 'FitWerk GmbH',
     providerAddress: 'Sportweg 1\n10117 Berlin',
   })
-  for (const s of ['Jana Müller', 'Lindenstraße 5', 'Vertragsnummer 4711', 'Kündigung Mitgliedschaft – Kunden-/Vertragsnummer 4711', 'Mit freundlichen Grüßen'])
+  for (const s of ['Jana Müller', 'Lindenstraße 5', 'Mitgliedsnummer 4711', 'Kündigung Mitgliedschaft – Mitgliedsnummer 4711', 'Mit freundlichen Grüßen'])
     expect(out).toContain(s)
 })
 
@@ -61,4 +61,11 @@ it('flows a long letter onto a second page and keeps the closing together', asyn
   expect(all).toContain('Bitte bestätigen Sie mir den Eingang')
   const closingPage = pages.find((p) => p.includes('Mit freundlichen Grüßen'))!
   expect(closingPage.trimEnd().endsWith('Jana Müller')).toBe(true)
+})
+
+it('embeds the drawn signature as an image only when there is one', () => {
+  const base = { ...EMPTY_LETTER_DATA, senderName: 'Jana Müller', contractNumber: '4711', place: 'Berlin' }
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+  expect(letterPdf(buildLetter({ ...base, signature: png })).output()).toContain('/Subtype /Image')
+  expect(letterPdf(buildLetter(base)).output()).not.toContain('/Subtype /Image')
 })

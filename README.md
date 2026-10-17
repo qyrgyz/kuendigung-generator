@@ -12,6 +12,10 @@ calculates binding deadlines; by default it cancels "zum nächstmöglichen Termi
 - Ordinary cancellation (next possible date or a fixed future date) or extraordinary cancellation
   (price increase, moving house, own reason), each with an ordinary fallback
 - Optional clauses: revoke the SEPA direct-debit mandate, revoke consent to advertising and data use
+- Suggestions for 10 common providers (Vodafone, Telekom, O2, 1&1, McFIT, Netflix, Spotify, Sky, Vattenfall,
+  HUK-COBURG) that fill in the address from each provider's legal notice, with source and date in `src/providers.json`
+- The contract number field is named the way the provider names it (Mitgliedsnummer, Versicherungsscheinnummer, …)
+- Optional drawn signature, placed above the signature line in the PDF
 - Live preview; the letter is always German, the interface is German or English
 - PDF with an embedded Noto Sans subset, so names like Łukasz, Şahin or Nguyễn render correctly
 - Accessible form: labelled fields, keyboard reachable, errors announced to screen readers, WCAG AA contrast

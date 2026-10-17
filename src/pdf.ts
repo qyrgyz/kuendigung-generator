@@ -49,6 +49,12 @@ export function letterPdf(l: Letter): jsPDF {
     y += LINE
   }
   newPageIfBelow(y + (l.closing.length - 1) * LINE) // keep greeting and signature on one page
+  if (l.signature) {
+    // drawn signature fills the gap between greeting and signature line, keeping its proportions
+    const { width, height } = doc.getImageProperties(l.signature)
+    const h = 12
+    doc.addImage(l.signature, 'PNG', LEFT, y + 1, Math.min((h * width) / height, 70), h)
+  }
   for (const c of l.closing) {
     doc.text(c, LEFT, y)
     y += LINE

@@ -1,0 +1,16 @@
+{
+  "checked": "2026-10-17",
+  "note": "Addresses copied from each provider's legal notice (Impressum, source URL per entry) on the date above. Re-check before relying on them; some providers use a separate cancellation address.",
+  "providers": [
+    { "brand": "Vodafone", "name": "Vodafone GmbH", "address": ["Kundenservice", "40875 Ratingen"], "source": "https://www.vodafone.de/de/rechtliches/impressum" },
+    { "brand": "Telekom", "name": "Telekom Deutschland GmbH", "address": ["Landgrabenweg 149", "53227 Bonn"], "source": "https://www.telekom.de/impressum" },
+    { "brand": "O2", "name": "Telefónica Germany GmbH & Co. OHG", "address": ["Georg-Brauchle-Ring 50", "80992 München"], "source": "https://www.o2online.de/recht/impressum/" },
+    { "brand": "1&1", "name": "1&1 Telecom GmbH", "address": ["Elgendorfer Str. 57", "56410 Montabaur"], "source": "https://unternehmen.1und1.de/unternehmen/impressum/" },
+    { "brand": "McFIT", "name": "RSG Group GmbH", "address": ["Tannenberg 4", "96132 Schlüsselfeld"], "source": "https://www.mcfit.com/impressum" },
+    { "brand": "Netflix", "name": "Netflix Services Germany GmbH", "address": ["Aaron-Bernstein-Platz 2", "10117 Berlin"], "source": "https://help.netflix.com/de/node/134094" },
+    { "brand": "Spotify", "name": "Spotify AB", "address": ["Regeringsgatan 19", "SE-111 53 Stockholm", "Schweden"], "source": "https://www.spotify.com/de/about-us/impressum/" },
+    { "brand": "Sky", "name": "Sky Deutschland Fernsehen GmbH & Co. KG", "address": ["Medienallee 26", "85774 Unterföhring"], "source": "https://www.sky.de/impressum" },
+    { "brand": "Vattenfall", "name": "Vattenfall Europe Sales GmbH", "address": ["Amerigo-Vespucci-Platz 2", "20457 Hamburg"], "source": "https://www.vattenfall.de/impressum" },
+    { "brand": "HUK-COBURG", "name": "HUK-COBURG", "address": ["96444 Coburg"], "source": "https://www.huk.de/impressum.html" }
+  ]
+}

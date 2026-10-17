@@ -13,7 +13,7 @@ async function fillRequired(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/^Your address/), 'Lindenstraße 5{enter}10115 Berlin')
   await user.type(screen.getByLabelText(/^Provider name/), 'Telefonica GmbH')
   await user.type(screen.getByLabelText(/^Provider address/), 'Postfach 1{enter}90345 Nürnberg')
-  await user.type(screen.getByLabelText(/^Customer or contract number/), 'K-123')
+  await user.type(screen.getByLabelText(/^Membership number/), 'K-123')
   await user.type(screen.getByLabelText(/^Place/), 'Berlin')
 }
 
@@ -25,10 +25,10 @@ it('switches the UI language while the letter stays German', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Deutsch' }))
   expect(screen.getByText('Keine Rechtsberatung.')).toBeInTheDocument()
-  expect(screen.getByLabelText(/^Kunden- oder Vertragsnummer/)).toBeInTheDocument()
+  expect(screen.getByLabelText(/^Mitgliedsnummer/)).toBeInTheDocument()
   expect(preview()).toHaveTextContent('Mit freundlichen Grüßen')
   await user.click(screen.getByRole('button', { name: 'English' }))
-  expect(screen.getByLabelText(/^Customer or contract number/)).toBeInTheDocument()
+  expect(screen.getByLabelText(/^Membership number/)).toBeInTheDocument()
 })
 
 it('builds the letter from the form and downloads it', async () => {
@@ -36,7 +36,7 @@ it('builds the letter from the form and downloads it', async () => {
   render(<App />)
   await fillRequired(user)
   await user.selectOptions(screen.getByLabelText('Contract type'), 'Mobile phone')
-  expect(preview()).toHaveTextContent('Kündigung Mobilfunkvertrag – Kunden-/Vertragsnummer K-123')
+  expect(preview()).toHaveTextContent('Kündigung Mobilfunkvertrag – Rufnummer/Kundennummer K-123')
   expect(preview()).toHaveTextContent('zum nächstmöglichen Termin')
 
   await user.click(screen.getByLabelText('Extraordinary / special right to cancel'))
@@ -68,7 +68,7 @@ it('blocks an incomplete download with an announced message and focus on the fir
   await user.click(button)
   expect(downloadPdf).not.toHaveBeenCalled()
   expect(screen.getByRole('alert')).toHaveTextContent(
-    'Still needed: Your address (street, postcode city), Provider name, Provider address, Customer or contract number, Place (for the date line)',
+    'Still needed: Your address (street, postcode city), Provider name, Provider address, Membership number, Place (for the date line)',
   )
   const address = screen.getByLabelText(/^Your address/)
   expect(address).toHaveFocus()
@@ -83,7 +83,7 @@ it('blocks an incomplete download with an announced message and focus on the fir
   await user.type(screen.getByLabelText(/^Your address/), 'Lindenstraße 5')
   await user.type(screen.getByLabelText(/^Provider name/), 'FitWerk GmbH')
   await user.type(screen.getByLabelText(/^Provider address/), 'Sportweg 1')
-  await user.type(screen.getByLabelText(/^Customer or contract number/), '4711')
+  await user.type(screen.getByLabelText(/^Membership number/), '4711')
   expect(screen.getByRole('alert')).toHaveTextContent('Still needed: Place (for the date line)')
 
   // whitespace alone does not count as filled in
@@ -123,4 +123,58 @@ it('dates the letter on the day of the download, even if the tab stayed open ove
   } finally {
     vi.useRealTimers()
   }
+})
+
+it('names the contract number field after the contract type, in both languages', async () => {
+  const user = userEvent.setup()
+  render(<App />)
+  expect(screen.getByRole('textbox', { name: 'Membership number' })).toBeInTheDocument()
+  await user.selectOptions(screen.getByLabelText('Contract type'), 'Insurance')
+  expect(screen.getByRole('textbox', { name: 'Policy number' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Deutsch' }))
+  expect(screen.getByRole('textbox', { name: 'Versicherungsscheinnummer' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'PDF herunterladen' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('Versicherungsscheinnummer')
+})
+
+it('fills the address when a known provider is picked, and keeps manual edits', async () => {
+  const user = userEvent.setup()
+  render(<App />)
+  const name = screen.getByRole('combobox', { name: 'Provider name' })
+  const address = screen.getByRole('textbox', { name: 'Provider address' })
+
+  await user.type(name, 'Unbekannte GmbH')
+  expect(address).toHaveValue('')
+
+  await user.clear(name)
+  await user.type(name, 'Vodafone GmbH') // what choosing the suggestion enters
+  expect(address).toHaveValue('Kundenservice\n40875 Ratingen')
+  expect(screen.getByText(/legal notice \(Impressum\), as of/)).toBeInTheDocument()
+  expect(preview()).toHaveTextContent('Vodafone GmbH Kundenservice 40875 Ratingen')
+
+  await user.type(address, '{enter}Postfach 1')
+  expect(address).toHaveValue('Kundenservice\n40875 Ratingen\nPostfach 1')
+  expect(screen.queryByText(/legal notice \(Impressum\)/)).not.toBeInTheDocument()
+})
+
+it('adds an optional drawn signature to the letter and can clear it', async () => {
+  vi.mocked(downloadPdf).mockClear()
+  const user = userEvent.setup()
+  render(<App />)
+  const clear = screen.getByRole('button', { name: 'Clear signature' })
+  expect(clear).toBeDisabled()
+
+  await user.pointer({ keys: '[MouseLeft]', target: screen.getByRole('img', { name: 'Signature pad' }) })
+  expect(clear).toBeEnabled()
+  expect(screen.getByRole('img', { name: 'Unterschrift' })).toBeInTheDocument()
+
+  await fillRequired(user)
+  await user.click(screen.getByRole('button', { name: 'Download PDF' }))
+  await vi.waitFor(() =>
+    expect(downloadPdf).toHaveBeenCalledWith(expect.objectContaining({ signature: expect.stringMatching(/^data:image\/png;base64,/) })),
+  )
+
+  await user.click(clear)
+  expect(screen.queryByRole('img', { name: 'Unterschrift' })).not.toBeInTheDocument()
+  expect(clear).toBeDisabled()
 })

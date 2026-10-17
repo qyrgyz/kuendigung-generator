@@ -23,7 +23,7 @@ describe('buildLetter', () => {
       'Jana Müller\nLindenstraße 5\n10115 Berlin',
       'FitWerk GmbH\nSportweg 1\n10117 Berlin',
       'Berlin, 17.10.2026',
-      'Kündigung Mitgliedschaft – Kunden-/Vertragsnummer 4711',
+      'Kündigung Mitgliedschaft – Mitgliedsnummer 4711',
       'Bitte bestätigen Sie mir den Eingang dieser Kündigung und den Zeitpunkt, zu dem sie wirksam wird, schriftlich.',
       'Mit freundlichen Grüßen',
       '______________________________\nJana Müller',
@@ -33,8 +33,8 @@ describe('buildLetter', () => {
 
   it('names the contract type in subject and termination sentence', () => {
     const t = text({ contractType: 'mobile' })
-    expect(t).toContain('Kündigung Mobilfunkvertrag – Kunden-/Vertragsnummer 4711')
-    expect(t).toContain('hiermit kündige ich meinen Mobilfunkvertrag (Kunden-/Vertragsnummer 4711)')
+    expect(t).toContain('Kündigung Mobilfunkvertrag – Rufnummer/Kundennummer 4711')
+    expect(t).toContain('hiermit kündige ich meinen Mobilfunkvertrag (Rufnummer/Kundennummer 4711)')
   })
 
   it('ordinary: next possible date', () => {
@@ -165,8 +165,31 @@ describe('fixed end date', () => {
 describe('preview of an empty form', () => {
   it('shows placeholders instead of broken punctuation', () => {
     const l = buildLetter(EMPTY_LETTER_DATA, today)
-    expect(l.subject).toBe('Kündigung Mitgliedschaft – Kunden-/Vertragsnummer …')
-    expect(l.paragraphs[1]).toContain('(Kunden-/Vertragsnummer …)')
+    expect(l.subject).toBe('Kündigung Mitgliedschaft – Mitgliedsnummer …')
+    expect(l.paragraphs[1]).toContain('(Mitgliedsnummer …)')
     expect(l.dateLine).toBe('…, 17.10.2026')
+  })
+})
+
+describe('contract identifier', () => {
+  it.each([
+    ['gym', 'Mitgliedsnummer'],
+    ['mobile', 'Rufnummer/Kundennummer'],
+    ['internet', 'Kundennummer'],
+    ['streaming', 'Kundennummer/E-Mail-Adresse des Kontos'],
+    ['insurance', 'Versicherungsscheinnummer'],
+    ['newspaper', 'Abonnentennummer'],
+    ['electricity', 'Kunden-/Vertragsnummer'],
+  ] as const)('%s uses "%s" in subject and termination sentence', (contractType, id) => {
+    const l = buildLetter({ ...data, contractType }, today)
+    expect(l.subject.endsWith(`– ${id} 4711`)).toBe(true)
+    expect(l.paragraphs[1]).toContain(`(${id} 4711)`)
+  })
+})
+
+describe('signature', () => {
+  it('passes the drawn signature through, empty when none', () => {
+    expect(buildLetter(data, today).signature).toBe('')
+    expect(buildLetter({ ...data, signature: 'data:image/png;base64,AAAA' }, today).signature).toBe('data:image/png;base64,AAAA')
   })
 })

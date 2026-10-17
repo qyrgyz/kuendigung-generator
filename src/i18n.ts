@@ -28,6 +28,7 @@ const de = {
     revokeSepa: 'SEPA-Lastschriftmandat widerrufen',
     revokeConsent: 'Einwilligung zu Werbung und Datennutzung widerrufen',
     place: 'Ort (für die Datumszeile)',
+    signature: 'Unterschrift (optional)',
   } satisfies Record<keyof LetterData, string>,
   contractTypes: {
     gym: 'Fitnessstudio',
@@ -38,6 +39,21 @@ const de = {
     newspaper: 'Zeitung / Zeitschrift',
     electricity: 'Strom',
   } satisfies Record<ContractType, string>,
+  // label of the contract number field, matching what the provider calls it
+  idLabels: {
+    gym: 'Mitgliedsnummer',
+    mobile: 'Rufnummer/Kundennummer',
+    internet: 'Kundennummer',
+    streaming: 'Kundennummer/E-Mail-Adresse des Kontos',
+    insurance: 'Versicherungsscheinnummer',
+    newspaper: 'Abonnentennummer',
+    electricity: 'Kunden-/Vertragsnummer',
+  } satisfies Record<ContractType, string>,
+  providerHint: (date: string) =>
+    `Adresse aus dem Impressum des Anbieters, Stand ${date}. Bitte mit Ihrem Vertrag abgleichen – manche Anbieter nennen eine eigene Adresse für Kündigungen.`,
+  signatureHint: 'Mit Maus, Stift oder Finger unterschreiben – oder später von Hand auf dem Ausdruck.',
+  signaturePad: 'Unterschriftsfeld',
+  clearSignature: 'Unterschrift löschen',
   terminationTypes: {
     ordinary: 'Ordentlich zum nächstmöglichen Termin',
     date: 'Zu einem bestimmten Datum',
@@ -80,6 +96,7 @@ const en: typeof de = {
     revokeSepa: 'Revoke SEPA direct-debit mandate',
     revokeConsent: 'Revoke consent to advertising and data use',
     place: 'Place (for the date line)',
+    signature: 'Signature (optional)',
   },
   contractTypes: {
     gym: 'Gym',
@@ -90,6 +107,20 @@ const en: typeof de = {
     newspaper: 'Newspaper / magazine',
     electricity: 'Electricity',
   },
+  idLabels: {
+    gym: 'Membership number',
+    mobile: 'Phone number / customer number',
+    internet: 'Customer number',
+    streaming: 'Customer number / account email',
+    insurance: 'Policy number',
+    newspaper: 'Subscriber number',
+    electricity: 'Customer / contract number',
+  },
+  providerHint: (date: string) =>
+    `Address from the provider's legal notice (Impressum), as of ${date}. Check it against your contract – some providers name a separate address for cancellations.`,
+  signatureHint: 'Sign with mouse, pen or finger – or sign the printout by hand later.',
+  signaturePad: 'Signature pad',
+  clearSignature: 'Clear signature',
   terminationTypes: {
     ordinary: 'Regular, at the next possible date',
     date: 'On a specific date',

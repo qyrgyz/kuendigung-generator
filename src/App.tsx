@@ -1,11 +1,17 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import SignatureCanvas from 'react-signature-canvas'
 import { STRINGS, type Lang } from './i18n'
+import providerData from './providers.json'
 import { buildLetter, CONTRACT_TYPES, EMPTY_LETTER_DATA, isoDate, missingFields, type Letter, type LetterData } from './letter'
 
 type TextKey = 'senderName' | 'senderAddress' | 'providerName' | 'providerAddress' | 'contractNumber' | 'place' | 'reasonText'
 
 // WCAG 1.3.5: identify the purpose of fields about the user themselves
 const AUTOCOMPLETE: Partial<Record<TextKey, string>> = { senderName: 'name', senderAddress: 'street-address', place: 'address-level2' }
+
+const PROVIDERS = providerData.providers
+// noon avoids a date shift west of UTC when the ISO date is read as UTC midnight
+const PROVIDERS_CHECKED = new Date(`${providerData.checked}T12:00`)
 
 // Form data lives only in React state: never stored or sent anywhere (ADR-0001)
 export default function App() {
@@ -15,12 +21,20 @@ export default function App() {
   const [attempted, setAttempted] = useState(false)
   const [downloadFailed, setDownloadFailed] = useState(false)
   const t = STRINGS[lang]
+  const signaturePad = useRef<SignatureCanvas>(null)
+  const fieldName = (k: keyof LetterData) => (k === 'contractNumber' ? t.idLabels[data.contractType] : t.fields[k])
   const letter = buildLetter(data)
   const missing = missingFields(data)
   const showErrors = attempted && missing.length > 0
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const set = <K extends keyof LetterData>(k: K, v: LetterData[K]) => setData((d) => ({ ...d, [k]: v }))
+  // picking a known provider fills its address; the user can still edit both fields afterwards
+  const setProvider = (name: string) => {
+    const p = PROVIDERS.find((x) => x.name === name)
+    setData((d) => ({ ...d, providerName: name, ...(p && { providerAddress: p.address.join('\n') }) }))
+  }
+  const knownProvider = PROVIDERS.some((p) => p.name === data.providerName && p.address.join('\n') === data.providerAddress)
   const errorProps = (k: keyof LetterData) =>
     showErrors && missing.includes(k) ? { 'aria-invalid': true, 'aria-describedby': 'missing' } : {}
 
@@ -45,7 +59,7 @@ export default function App() {
 
   const label = (k: keyof LetterData) => (
     <label htmlFor={k}>
-      {t.fields[k]}
+      {fieldName(k)}
       <span aria-hidden="true"> *</span>
     </label>
   )
@@ -56,7 +70,9 @@ export default function App() {
       required: true,
       value: data[k],
       autoComplete: AUTOCOMPLETE[k],
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => set(k, e.target.value),
+      list: k === 'providerName' ? 'providers' : undefined,
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+        k === 'providerName' ? setProvider(e.target.value) : set(k, e.target.value),
       ...errorProps(k),
     }
     return (
@@ -110,6 +126,12 @@ export default function App() {
             <legend>{t.sections.provider}</legend>
             {textField('providerName')}
             {textField('providerAddress', 2)}
+            {knownProvider && <p className="hint">{t.providerHint(new Intl.DateTimeFormat(lang).format(PROVIDERS_CHECKED))}</p>}
+            <datalist id="providers">
+              {PROVIDERS.map((p) => (
+                <option key={p.name} value={p.name} label={p.brand} />
+              ))}
+            </datalist>
             <p>
               <label htmlFor="contractType">{t.fields.contractType}</label>
               <select
@@ -181,12 +203,35 @@ export default function App() {
             ))}
           </fieldset>
 
+          <fieldset>
+            <legend>{t.fields.signature}</legend>
+            <p className="hint" id="signature-hint">
+              {t.signatureHint}
+            </p>
+            <SignatureCanvas
+              ref={signaturePad}
+              canvasProps={{ className: 'sig-pad', role: 'img', 'aria-label': t.signaturePad, 'aria-describedby': 'signature-hint' }}
+              onEnd={() => set('signature', signaturePad.current?.toDataURL('image/png') ?? '')}
+            />
+            <button
+              type="button"
+              className="secondary"
+              disabled={!data.signature}
+              onClick={() => {
+                signaturePad.current?.clear()
+                set('signature', '')
+              }}
+            >
+              {t.clearSignature}
+            </button>
+          </fieldset>
+
           <button type="button" className="primary" onClick={download}>
             {t.download}
           </button>
           {showErrors && (
             <p id="missing" role="alert">
-              {t.missing} {missing.map((k) => t.fields[k]).join(', ')}
+              {t.missing} {missing.map(fieldName).join(', ')}
             </p>
           )}
           {downloadFailed && (
@@ -221,7 +266,15 @@ function Preview({ letter }: { letter: Letter }) {
       {letter.paragraphs.map((p) => (
         <p key={p}>{p}</p>
       ))}
-      <p>{letter.closing.join('\n')}</p>
+      {letter.signature ? (
+        <p>
+          {letter.closing[0]}
+          <img className="sig" src={letter.signature} alt="Unterschrift" />
+          {letter.closing.slice(3).join('\n')}
+        </p>
+      ) : (
+        <p>{letter.closing.join('\n')}</p>
+      )}
     </article>
   )
 }

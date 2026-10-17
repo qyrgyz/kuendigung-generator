@@ -25,9 +25,9 @@ it('clicking the download button produces a PDF file, without sending or storing
   render(<App />)
   await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Jürgen Weiß')
   await user.type(screen.getByRole('textbox', { name: 'Your address (street, postcode city)' }), 'Große Straße 3{enter}80331 München')
-  await user.type(screen.getByRole('textbox', { name: 'Provider name' }), 'Ökostrom Süd GmbH')
+  await user.type(screen.getByRole('combobox', { name: 'Provider name' }), 'Ökostrom Süd GmbH')
   await user.type(screen.getByRole('textbox', { name: 'Provider address' }), 'Äußere Ringstraße 9{enter}70173 Stuttgart')
-  await user.type(screen.getByRole('textbox', { name: 'Customer or contract number' }), 'K-123')
+  await user.type(screen.getByRole('textbox', { name: 'Membership number' }), 'K-123')
   await user.type(screen.getByRole('textbox', { name: 'Place (for the date line)' }), 'München')
   await user.click(screen.getByRole('button', { name: 'Download PDF' }))
 

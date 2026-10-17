@@ -19,6 +19,8 @@ export type LetterData = {
   revokeSepa: boolean
   revokeConsent: boolean
   place: string
+  /** PNG data URL from the optional signature pad; empty means sign the printout by hand */
+  signature: string
 }
 
 export type Letter = {
@@ -28,6 +30,7 @@ export type Letter = {
   subject: string
   paragraphs: string[]
   closing: string[]
+  signature: string
 }
 
 export const EMPTY_LETTER_DATA: LetterData = {
@@ -44,17 +47,18 @@ export const EMPTY_LETTER_DATA: LetterData = {
   revokeSepa: true,
   revokeConsent: false,
   place: '',
+  signature: '',
 }
 
-// nominative for the subject line, accusative for "hiermit kündige ich …"
-const CONTRACT: Record<ContractType, { noun: string; acc: string }> = {
-  gym: { noun: 'Mitgliedschaft', acc: 'meine Mitgliedschaft' },
-  mobile: { noun: 'Mobilfunkvertrag', acc: 'meinen Mobilfunkvertrag' },
-  internet: { noun: 'Internetvertrag', acc: 'meinen Internetvertrag' },
-  streaming: { noun: 'Streaming-Abonnement', acc: 'mein Streaming-Abonnement' },
-  insurance: { noun: 'Versicherungsvertrag', acc: 'meinen Versicherungsvertrag' },
-  newspaper: { noun: 'Zeitungsabonnement', acc: 'mein Zeitungsabonnement' },
-  electricity: { noun: 'Stromliefervertrag', acc: 'meinen Stromliefervertrag' },
+// nominative for the subject line, accusative for "hiermit kündige ich …", and the identifier the provider uses
+const CONTRACT: Record<ContractType, { noun: string; acc: string; id: string }> = {
+  gym: { noun: 'Mitgliedschaft', acc: 'meine Mitgliedschaft', id: 'Mitgliedsnummer' },
+  mobile: { noun: 'Mobilfunkvertrag', acc: 'meinen Mobilfunkvertrag', id: 'Rufnummer/Kundennummer' },
+  internet: { noun: 'Internetvertrag', acc: 'meinen Internetvertrag', id: 'Kundennummer' },
+  streaming: { noun: 'Streaming-Abonnement', acc: 'mein Streaming-Abonnement', id: 'Kundennummer/E-Mail-Adresse des Kontos' },
+  insurance: { noun: 'Versicherungsvertrag', acc: 'meinen Versicherungsvertrag', id: 'Versicherungsscheinnummer' },
+  newspaper: { noun: 'Zeitungsabonnement', acc: 'mein Zeitungsabonnement', id: 'Abonnentennummer' },
+  electricity: { noun: 'Stromliefervertrag', acc: 'meinen Stromliefervertrag', id: 'Kunden-/Vertragsnummer' },
 }
 
 // State the facts only: whether they create a special right to cancel depends on the contract and law
@@ -90,8 +94,8 @@ export function buildLetter(d: LetterData, today = new Date()): Letter {
   // '…' only shows in the live preview: the download stays blocked until these are filled in
   const nr = d.contractNumber.trim() || '…'
   const place = d.place.trim() || '…'
-  const { noun, acc } = CONTRACT[d.contractType]
-  const what = `hiermit kündige ich ${acc} (Kunden-/Vertragsnummer ${nr})`
+  const { noun, acc, id } = CONTRACT[d.contractType]
+  const what = `hiermit kündige ich ${acc} (${id} ${nr})`
   // ADR-0004: always fall back to the next possible date instead of computing one
   const termination = {
     ordinary: `${what} ordentlich und fristgerecht zum nächstmöglichen Termin.`,
@@ -104,7 +108,7 @@ export function buildLetter(d: LetterData, today = new Date()): Letter {
     sender: [d.senderName.trim(), ...lines(d.senderAddress)],
     recipient: [d.providerName.trim(), ...lines(d.providerAddress)],
     dateLine: `${place}, ${formatDate(today)}`,
-    subject: `Kündigung ${noun} – Kunden-/Vertragsnummer ${nr}`,
+    subject: `Kündigung ${noun} – ${id} ${nr}`,
     paragraphs: [
       'Sehr geehrte Damen und Herren,',
       termination,
@@ -116,5 +120,6 @@ export function buildLetter(d: LetterData, today = new Date()): Letter {
       'Bitte bestätigen Sie mir den Eingang dieser Kündigung und den Zeitpunkt, zu dem sie wirksam wird, schriftlich.',
     ],
     closing: ['Mit freundlichen Grüßen', '', '', '______________________________', d.senderName.trim()],
+    signature: d.signature,
   }
 }
