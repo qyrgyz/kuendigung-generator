@@ -87,6 +87,10 @@ export default function App() {
     <main lang={lang}>
       <header>
         <div>
+          <p className="brand">
+            <Logo />
+            Kündigung Generator
+          </p>
           <h1>{t.title}</h1>
           <p className="lead">{t.subtitle}</p>
           <p className="badge">{t.privacy}</p>
@@ -126,7 +130,7 @@ export default function App() {
             <legend>{t.sections.provider}</legend>
             {textField('providerName')}
             {textField('providerAddress', 2)}
-            {knownProvider && <p className="hint">{t.providerHint(new Intl.DateTimeFormat(lang).format(PROVIDERS_CHECKED))}</p>}
+            {knownProvider && <p className="hint provider-hint">{t.providerHint(new Intl.DateTimeFormat(lang).format(PROVIDERS_CHECKED))}</p>}
             <datalist id="providers">
               {PROVIDERS.map((p) => (
                 <option key={p.name} value={p.name} label={p.brand} />
@@ -250,7 +254,30 @@ export default function App() {
           <Preview letter={letter} />
         </section>
       </div>
+
+      <footer>
+        <p>
+          {t.footer} ·{' '}
+          <a href="https://github.com/qyrgyz/kuendigung-generator" target="_blank" rel="noopener noreferrer">
+            {t.sourceCode}
+            <span className="sr-only"> {t.newTab}</span>
+          </a>
+        </p>
+      </footer>
     </main>
+  )
+}
+
+/** Envelope with a check: the letter is done. Same artwork as public/favicon.svg. */
+function Logo() {
+  return (
+    <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="8" fill="#1d4ed8" />
+      <rect x="6" y="9" width="18" height="13" rx="2" fill="none" stroke="#fff" strokeWidth="2" />
+      <path d="m7 10 8 6 8-6" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="24" cy="22" r="6" fill="#16a34a" stroke="#1d4ed8" strokeWidth="1.5" />
+      <path d="m21.4 22 1.8 1.8 3.3-3.4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }
 

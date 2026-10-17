@@ -20,12 +20,15 @@
   --error: light-dark(#b3261e, #ff8a80);
   --focus: light-dark(#1a5fb4, #99c1f1);
   --radius: 10px;
+  --shadow-color: light-dark(#1b1d2217, #00000080);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   color: var(--text);
 }
 
-body { margin: 0; background: var(--bg); }
+/* a soft accent glow behind the header; flat colour below */
+body { margin: 0; background: radial-gradient(1100px 380px at 50% -120px, var(--accent-soft), transparent 70%) no-repeat, var(--bg); min-height: 100vh; }
 main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
 
 header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
@@ -46,7 +49,7 @@ a { color: var(--accent); }
   .preview-pane { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
 }
 
-form, .preview-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+form, .preview-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: 0 1px 2px var(--shadow-color), 0 16px 40px -20px var(--shadow-color); }
 .hint { margin: 0 0 8px; font-size: 0.875rem; color: var(--muted); }
 
 /* numbered sections */
@@ -88,7 +91,7 @@ button.primary:hover { background: var(--accent-hover); }
 button.secondary { flex: none; min-height: 40px; padding: 8px 16px; font-weight: 600; color: var(--text); background: var(--surface); border: 1px solid var(--field-border); }
 button.secondary:hover { border-color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
-  button, label.choice, input, textarea, select { transition: background-color 120ms, border-color 120ms; }
+  button, label.choice, input, textarea, select { transition: background-color 120ms ease, border-color 120ms ease, transform 120ms var(--ease-out); }
 }
 
 [aria-invalid='true'] { border-color: var(--error) !important; box-shadow: 0 0 0 1px var(--error); }
@@ -118,3 +121,43 @@ button.secondary:hover { border-color: var(--muted); }
 .sig-pad { display: block; width: 100%; height: 140px; margin: 8px 0; box-sizing: border-box; touch-action: none; background: #fff; border: 1px dashed var(--field-border); border-radius: 8px; }
 fieldset button.secondary:disabled { opacity: 0.55; cursor: not-allowed; }
 .preview .sig { display: block; height: 3.2em; max-width: 50%; margin: 0.2em 0 -0.4em; }
+
+/* brand line with logo */
+.brand { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-weight: 700; letter-spacing: 0.01em; }
+.logo { width: 36px; height: 36px; flex: none; filter: drop-shadow(0 4px 10px color-mix(in srgb, #1d4ed8 35%, transparent)); }
+button.primary { box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 80%, transparent); }
+
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; font-size: 0.875rem; color: var(--muted); }
+footer p { margin: 0; }
+
+/* ---------- motion ----------
+   Page entrance: once per visit, so a short stagger is allowed (first-time tier).
+   Conditional fields and messages: fade + small lift so the form does not jump (state indication).
+   Button press: quick scale for feedback. The live preview never animates: it changes on every keystroke. */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes fade { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  header, main > .note, .layout > *, footer { animation: rise 420ms var(--ease-out) both; }
+  main > .note { animation-delay: 60ms; }
+  .layout > :first-child { animation-delay: 120ms; }
+  .layout > :last-child { animation-delay: 180ms; }
+  footer { animation-delay: 240ms; }
+
+  .choices > p, #missing, .error, .provider-hint {
+    transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+    @starting-style { opacity: 0; transform: translateY(-4px); }
+  }
+
+  button:active:not(:disabled), label.choice:active { transform: scale(0.98); }
+  button.primary:active { transform: scale(0.97); }
+}
+
+/* reduced motion: keep gentle fades that help orientation, drop all movement */
+@media (prefers-reduced-motion: reduce) {
+  header, main > .note, .layout > *, footer { animation: fade 200ms ease both; }
+  .choices > p, #missing, .error, .provider-hint {
+    transition: opacity 200ms ease;
+    @starting-style { opacity: 0; }
+  }
+}
